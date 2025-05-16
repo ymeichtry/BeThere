@@ -1,19 +1,13 @@
-import { NavLink, useNavigate } from "react-router-dom";
-import { FaSearch, FaPlus, FaCog, FaSignOutAlt } from "react-icons/fa";
+import { NavLink } from "react-router-dom";
+import { FaSearch, FaPlus, FaCog } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 import "./Navbar.css";
 
 const Navbar = () => {
-  const { isAuthenticated, logout } = useAuth();
-  const navigate = useNavigate();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/signin');
-  };
+  const { isAuthenticated } = useAuth();
 
   if (!isAuthenticated) {
-    return null; // Keine Navbar anzeigen, wenn nicht eingeloggt
+    return null;
   }
 
   return (
@@ -30,10 +24,6 @@ const Navbar = () => {
         <FaCog className="nav-icon" />
         <span className="nav-text">Settings</span>
       </NavLink>
-      <button onClick={handleLogout} className="nav-item">
-        <FaSignOutAlt className="nav-icon" />
-        <span className="nav-text">Logout</span>
-      </button>
     </nav>
   );
 };
