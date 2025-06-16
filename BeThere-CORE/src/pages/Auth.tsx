@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
+import { Eye, EyeOff } from "lucide-react";
 
 type AuthView = "login" | "signup";
 
@@ -13,6 +14,7 @@ const AuthPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
   // Session check & redirect to "/" if logged in
@@ -77,13 +79,24 @@ const AuthPage: React.FC = () => {
             required
             autoFocus={view === "login"}
           />
-          <Input
-            placeholder="Passwort"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            type="password"
-            required
-          />
+          <div className="relative">
+            <Input
+              placeholder="Passwort"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              type={showPassword ? "text" : "password"}
+              required
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="absolute right-0 top-0 h-full px-3 py-2 text-muted-foreground hover:bg-transparent"
+              onClick={() => setShowPassword(prev => !prev)}
+            >
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+            </Button>
+          </div>
           <Button type="submit" disabled={loading} className="w-full">
             {loading ? "Lädt..." : view === "login" ? "Login" : "Registrieren"}
           </Button>
