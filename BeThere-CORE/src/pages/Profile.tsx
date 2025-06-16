@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ const ProfilePage = () => {
   const [profile, setProfile] = useState<{ id: string; name: string | null; avatar_url: string | null }>({ id: "", name: "", avatar_url: null });
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(true);
+  const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
 
@@ -32,33 +34,64 @@ const ProfilePage = () => {
       }
     };
     getProfile();
-    // eslint-disable-next-line
-  }, []);
+  }, [navigate]);
 
   const handleNameUpdate = async () => {
     setLoading(true);
     const { error } = await supabase.from("profiles").update({ name }).eq("id", profile.id);
     setLoading(false);
     if (error) toast({ title: "Fehler", description: error.message });
-    else toast({ title: "Profil aktualisiert", description: "Dein Name wurde aktualisiert." });
+    else {
+      toast({ title: "Profil aktualisiert", description: "Dein Name wurde aktualisiert." });
+      setProfile(prev => ({ ...prev, name }));
+    }
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const filePath = `${profile.id}/${Date.now()}_${file.name}`;
-    const { error } = await supabase.storage.from("avatars").upload(filePath, file, { upsert: true });
-    if (error) {
-      toast({ title: "Fehler beim Upload", description: error.message });
-    } else {
-      const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
-      console.log("Attempting to update profile with:", {
-        id: profile.id,
-        avatar_url: data.publicUrl,
-      });
-      await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", profile.id);
+
+    setUploading(true);
+    
+    try {
+      // Erstelle einen eindeutigen Dateinamen
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${profile.id}/${fileName}`;
+
+      // Upload zu Supabase Storage
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, { upsert: true });
+
+      if (uploadError) {
+        throw uploadError;
+      }
+
+      // Hole die öffentliche URL
+      const { data } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Aktualisiere das Profil mit der neuen URL
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: data.publicUrl })
+        .eq("id", profile.id);
+
+      if (updateError) {
+        throw updateError;
+      }
+
       setProfile(prev => ({ ...prev, avatar_url: data.publicUrl }));
       toast({ title: "Profilbild aktualisiert" });
+    } catch (error: any) {
+      toast({ 
+        title: "Fehler beim Upload", 
+        description: error.message || "Unbekannter Fehler" 
+      });
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -77,12 +110,16 @@ const ProfilePage = () => {
       <h1 className="text-2xl font-bold">Profil</h1>
       <div className="flex flex-col items-center gap-2">
         <img
-          src={profile.avatar_url ?? "/placeholder.svg"}
+          src={profile.avatar_url || "/placeholder.svg"}
           alt="Avatar"
           className="w-24 h-24 object-cover rounded-full border"
         />
-        <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-          Profilbild ändern
+        <Button 
+          variant="outline" 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={uploading}
+        >
+          {uploading ? "Lädt hoch..." : "Profilbild ändern"}
         </Button>
         <input
           type="file"
@@ -94,8 +131,8 @@ const ProfilePage = () => {
       </div>
       <div>
         <label className="block font-medium mb-1">Name</label>
-        <Input value={name ?? ""} onChange={e => setName(e.target.value)} />
-        <Button className="mt-2" onClick={handleNameUpdate}>
+        <Input value={name} onChange={e => setName(e.target.value)} />
+        <Button className="mt-2" onClick={handleNameUpdate} disabled={loading}>
           Speichern
         </Button>
       </div>
@@ -103,4 +140,5 @@ const ProfilePage = () => {
     </div>
   );
 };
+
 export default ProfilePage;
