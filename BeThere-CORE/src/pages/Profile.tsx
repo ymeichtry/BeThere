@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -47,12 +46,16 @@ const ProfilePage = () => {
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const filePath = `avatars/${profile.id}/${Date.now()}_${file.name}`;
-    let { error } = await supabase.storage.from("avatars").upload(filePath, file, { upsert: true });
+    const filePath = `${profile.id}/${Date.now()}_${file.name}`;
+    const { error } = await supabase.storage.from("avatars").upload(filePath, file, { upsert: true });
     if (error) {
       toast({ title: "Fehler beim Upload", description: error.message });
     } else {
       const { data } = supabase.storage.from("avatars").getPublicUrl(filePath);
+      console.log("Attempting to update profile with:", {
+        id: profile.id,
+        avatar_url: data.publicUrl,
+      });
       await supabase.from("profiles").update({ avatar_url: data.publicUrl }).eq("id", profile.id);
       setProfile(prev => ({ ...prev, avatar_url: data.publicUrl }));
       toast({ title: "Profilbild aktualisiert" });
