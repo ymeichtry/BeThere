@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -31,6 +30,7 @@ const ProfilePage = () => {
         setProfile(data);
         setName(data.name || "");
         setLoading(false);
+        console.log("Fetched profile avatar_url:", data.avatar_url);
       }
     };
     getProfile();
@@ -56,7 +56,7 @@ const ProfilePage = () => {
     try {
       // Erstelle einen eindeutigen Dateinamen
       const fileExt = file.name.split('.').pop();
-      const fileName = `${profile.id}-${Date.now()}.${fileExt}`;
+      const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${profile.id}/${fileName}`;
 
       // Upload zu Supabase Storage
@@ -73,6 +73,9 @@ const ProfilePage = () => {
         .from("avatars")
         .getPublicUrl(filePath);
 
+      // Debugging: Log the generated public URL
+      console.log("Generated Public URL:", data.publicUrl);
+
       // Aktualisiere das Profil mit der neuen URL
       const { error: updateError } = await supabase
         .from("profiles")
@@ -85,10 +88,10 @@ const ProfilePage = () => {
 
       setProfile(prev => ({ ...prev, avatar_url: data.publicUrl }));
       toast({ title: "Profilbild aktualisiert" });
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({ 
         title: "Fehler beim Upload", 
-        description: error.message || "Unbekannter Fehler" 
+        description: (error as Error).message || "Unbekannter Fehler" 
       });
     } finally {
       setUploading(false);
