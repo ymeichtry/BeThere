@@ -1,4 +1,3 @@
-
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -69,9 +68,9 @@ const PartyCard: React.FC<PartyCardProps> = ({
 
   const copyPrivateLink = async (e: React.MouseEvent) => {
     e.stopPropagation();
-    const link = `${window.location.origin}/party/${party.id}?access=${party.access_id}`;
-    await navigator.clipboard.writeText(link);
-    toast({ title: "Link kopiert", description: "Der private Party-Link wurde in die Zwischenablage kopiert" });
+    const idToCopy = party.access_id;
+    await navigator.clipboard.writeText(idToCopy);
+    toast({ title: "ID kopiert", description: "Die Party-ID wurde in die Zwischenablage kopiert" });
   };
 
   return (

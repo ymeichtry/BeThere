@@ -1,8 +1,10 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import PartyCard from "@/components/PartyCard";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 
 type Profile = { id: string; name: string | null; avatar_url: string | null };
 
@@ -26,6 +28,7 @@ const MyAttendance = () => {
   const [likesCount, setLikesCount] = useState<{ [id: string]: number }>({});
   const [attendeesCount, setAttendeesCount] = useState<{ [id: string]: number }>({});
   const [loading, setLoading] = useState(true);
+  const [inviteLink, setInviteLink] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -125,11 +128,97 @@ const MyAttendance = () => {
     setLoading(false);
   };
 
+  const handleInviteLinkSubmit = async () => {
+    if (!inviteLink) {
+      toast({ title: "Fehler", description: "Bitte geben Sie eine Party-ID ein." });
+      return;
+    }
+
+    const accessId = inviteLink;
+
+    if (!accessId) {
+      toast({ title: "Fehler", description: "Ungültige Party-ID." });
+      return;
+    }
+
+    setLoading(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      toast({ title: "Fehler", description: "Sie müssen angemeldet sein." });
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const { data: party, error: partyError } = await supabase
+        .from("parties")
+        .select("*")
+        .eq("access_id", accessId)
+        .single();
+
+      if (partyError || !party) {
+        throw new Error("Party nicht gefunden oder Zugriff verweigert.");
+      }
+
+      if (party.is_public) {
+        throw new Error("Dies ist eine öffentliche Party und sollte bereits sichtbar sein.");
+      }
+
+      // Check if already attending
+      const { data: existingAttendance } = await supabase
+        .from("party_attendees")
+        .select("*")
+        .eq("party_id", party.id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (existingAttendance) {
+        toast({ title: "Bereits angemeldet", description: "Sie sind bereits für diese Party angemeldet." });
+        setLoading(false);
+        return;
+      }
+
+      // Add user to party_attendees
+      const { error: attendeeError } = await supabase
+        .from("party_attendees")
+        .insert({
+          party_id: party.id,
+          user_id: user.id,
+          status: "attending" // Default status
+        });
+
+      if (attendeeError) {
+        throw attendeeError;
+      }
+
+      toast({ title: "Party hinzugefügt", description: "Die private Party wurde zu Ihren Anmeldungen hinzugefügt." });
+      setInviteLink(""); // Clear input
+      fetchMyAttendance(); // Refresh the list
+
+    } catch (error: any) {
+      toast({ title: "Fehler", description: error.message || "Ein unbekannter Fehler ist aufgetreten." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center items-center min-h-[60vh]">Lädt...</div>;
 
   return (
     <div className="max-w-4xl mx-auto mt-8 flex flex-col gap-6">
       <h1 className="text-3xl font-bold">Meine Anmeldungen</h1>
+
+      <div className="flex gap-2">
+        <Input
+          placeholder="Private Party-ID eingeben"
+          value={inviteLink}
+          onChange={(e) => setInviteLink(e.target.value)}
+          className="flex-grow"
+        />
+        <Button onClick={handleInviteLinkSubmit} disabled={loading}>
+          Hinzufügen
+        </Button>
+      </div>
       
       {parties.length === 0 ? (
         <div className="text-center text-gray-500 mt-10">

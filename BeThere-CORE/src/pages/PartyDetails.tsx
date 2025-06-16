@@ -1,11 +1,10 @@
-
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
-import { Heart, MessageCircle, Users, Calendar, MapPin, Music } from "lucide-react";
+import { Heart, MessageCircle, Users, Calendar, MapPin, Music, Copy } from "lucide-react";
 
 type Party = {
   id: string;
@@ -18,6 +17,7 @@ type Party = {
   entry_fee: number | null;
   is_public: boolean;
   created_by: string;
+  access_id: string;
 };
 
 type Profile = {
@@ -250,71 +250,76 @@ const PartyDetails = () => {
     return <div className="text-center mt-10">Party nicht gefunden</div>;
   }
 
+  const partyLink = party.access_id;
+
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-6">
-      {/* Party Header */}
-      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
-        <div className="flex items-start gap-4 mb-4">
-          <img
-            src={host?.avatar_url || "/placeholder.svg"}
-            alt="Host"
-            className="w-16 h-16 rounded-full object-cover border"
+    <div className="max-w-4xl mx-auto mt-8 p-6 border rounded-lg shadow-md bg-white">
+      <h1 className="text-3xl font-bold mb-4">{party.title}</h1>
+      
+      {!party.is_public && party.access_id && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-2">
+          <p className="text-blue-800 text-sm font-medium">Dies ist eine private Party. Teilen Sie diese ID, um andere einzuladen:</p>
+          <Input
+            type="text"
+            value={partyLink}
+            readOnly
+            className="flex-grow border-blue-300 bg-blue-100 text-blue-900"
           />
-          <div className="flex-1">
-            <h1 className="text-3xl font-bold mb-2">{party.title}</h1>
-            <p className="text-gray-600 mb-4">Host: {host?.name || "Unbekannt"}</p>
-            {party.description && (
-              <p className="text-gray-700 mb-4 whitespace-pre-line">{party.description}</p>
-            )}
-          </div>
-        </div>
-
-        {/* Party Info */}
-        <div className="grid md:grid-cols-2 gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-blue-500" />
-            <span>{new Date(party.datetime).toLocaleString()}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <MapPin className="w-5 h-5 text-red-500" />
-            <span>{party.location}</span>
-          </div>
-          {party.genre && (
-            <div className="flex items-center gap-2">
-              <Music className="w-5 h-5 text-purple-500" />
-              <span>{party.genre}</span>
-            </div>
-          )}
-          {party.entry_fee && (
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Eintritt: {party.entry_fee}€</span>
-            </div>
-          )}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-4 items-center">
           <Button
-            onClick={handleAttendance}
-            variant={isAttending ? "default" : "outline"}
-            className="flex items-center gap-2"
-          >
-            <Users className="w-4 h-4" />
-            {isAttending ? "Abmelden" : "Anmelden"}
-          </Button>
-          
-          <Button
-            onClick={handleLike}
             variant="outline"
-            className="flex items-center gap-2"
+            size="sm"
+            onClick={() => {
+              navigator.clipboard.writeText(partyLink);
+              toast({ title: "ID kopiert", description: "Die Party-ID wurde in die Zwischenablage kopiert." });
+            }}
           >
-            <Heart className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
-            {likesCount} {isLiked ? "Geliked" : "Likes"}
+            <Copy className="h-4 w-4 mr-1" /> Kopieren
           </Button>
         </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-5 h-5 text-blue-500" />
+          <span>{new Date(party.datetime).toLocaleString()}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <MapPin className="w-5 h-5 text-red-500" />
+          <span>{party.location}</span>
+        </div>
+        {party.genre && (
+          <div className="flex items-center gap-2">
+            <Music className="w-5 h-5 text-purple-500" />
+            <span>{party.genre}</span>
+          </div>
+        )}
+        {party.entry_fee && (
+          <div className="flex items-center gap-2">
+            <span className="font-medium">Eintritt: {party.entry_fee}€</span>
+          </div>
+        )}
       </div>
 
-      {/* Attendees */}
+      <div className="flex gap-4 items-center">
+        <Button
+          onClick={handleAttendance}
+          variant={isAttending ? "default" : "outline"}
+          className="flex items-center gap-2"
+        >
+          <Users className="w-4 h-4" />
+          {isAttending ? "Abmelden" : "Anmelden"}
+        </Button>
+        
+        <Button
+          onClick={handleLike}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
+          <Heart className={`w-4 h-4 ${isLiked ? "fill-red-500 text-red-500" : ""}`} />
+          {likesCount} {isLiked ? "Geliked" : "Likes"}
+        </Button>
+      </div>
+
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <Users className="w-5 h-5" />
@@ -334,14 +339,12 @@ const PartyDetails = () => {
         </div>
       </div>
 
-      {/* Comments Section */}
       <div className="bg-white rounded-lg shadow-lg p-6">
         <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
           <MessageCircle className="w-5 h-5" />
           Kommentare
         </h2>
         
-        {/* Add Comment */}
         <div className="flex gap-2 mb-6">
           <Input
             value={newComment}
@@ -355,7 +358,6 @@ const PartyDetails = () => {
           </Button>
         </div>
 
-        {/* Comments List */}
         <div className="space-y-4">
           {comments.map((comment) => (
             <div key={comment.id} className="flex gap-3 p-3 bg-gray-50 rounded-lg">
