@@ -55,12 +55,14 @@ const PartyDetails = () => {
   const [isAttending, setIsAttending] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  console.log("PartyDetails - isAttending:", isAttending);
+
   useEffect(() => {
     const getSession = async () => {
       const { data } = await supabase.auth.getSession();
       setSession(data.session);
       if (data.session) {
-        fetchPartyDetails();
+        fetchPartyDetails(data.session);
       } else {
         navigate("/auth");
       }
@@ -68,7 +70,7 @@ const PartyDetails = () => {
     getSession();
   }, [id, navigate]);
 
-  const fetchPartyDetails = async () => {
+  const fetchPartyDetails = async (currentSession: any = session) => {
     if (!id) return;
 
     // Party Details laden
@@ -136,12 +138,12 @@ const PartyDetails = () => {
     setLikesCount(likesCountData || 0);
 
     // Check if user liked
-    if (session?.user) {
+    if (currentSession?.user) {
       const { data: userLike } = await supabase
         .from("party_likes")
         .select("id")
         .eq("party_id", id)
-        .eq("user_id", session.user.id)
+        .eq("user_id", currentSession.user.id)
         .maybeSingle();
 
       setIsLiked(!!userLike);
@@ -151,7 +153,7 @@ const PartyDetails = () => {
         .from("party_attendees")
         .select("id")
         .eq("party_id", id)
-        .eq("user_id", session.user.id)
+        .eq("user_id", currentSession.user.id)
         .maybeSingle();
 
       setIsAttending(!!userAttendance);
@@ -268,10 +270,7 @@ const PartyDetails = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              navigator.clipboard.writeText(partyLink);
-              toast({ title: "ID kopiert", description: "Die Party-ID wurde in die Zwischenablage kopiert." });
-            }}
+            className="flex items-center gap-1"
           >
             <Copy className="h-4 w-4 mr-1" /> Kopieren
           </Button>
