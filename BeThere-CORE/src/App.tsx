@@ -1,9 +1,9 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Link, Navigate } from "react-router-dom";
+import NotificationBell from "./components/NotificationBell";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import AuthPage from "./pages/Auth";
@@ -30,6 +30,7 @@ const App = () => (
             <Link to="/my-attendance" className="hover:underline">Meine Anmeldungen</Link>
             <Link to="/create-party" className="hover:underline">Party erstellen</Link>
             <Link to="/profile" className="ml-auto hover:underline">Profil</Link>
+            <NotificationBell />
           </div>
         </nav>
         <Routes>
