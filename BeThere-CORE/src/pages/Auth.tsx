@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +11,7 @@ const AuthPage: React.FC = () => {
   const [view, setView] = useState<AuthView>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -38,6 +38,9 @@ const AuthPage: React.FC = () => {
         password,
         options: {
           emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            name: name,
+          },
         },
       });
       setLoading(false);
@@ -56,13 +59,23 @@ const AuthPage: React.FC = () => {
       <div className="w-full max-w-md border rounded-lg p-6 bg-white shadow-md">
         <h2 className="text-2xl font-bold mb-4">{view === "login" ? "Login" : "Registrieren"}</h2>
         <form onSubmit={handleAuth} className="flex flex-col gap-3">
+          {view === "signup" && (
+            <Input
+              placeholder="Name"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              type="text"
+              required
+              autoFocus
+            />
+          )}
           <Input
             placeholder="E-Mail"
             value={email}
             onChange={e => setEmail(e.target.value)}
             type="email"
             required
-            autoFocus
+            autoFocus={view === "login"}
           />
           <Input
             placeholder="Passwort"
