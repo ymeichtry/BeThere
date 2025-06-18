@@ -48,6 +48,8 @@ const MapPage = () => {
   const [attendeesCount, setAttendeesCount] = useState<number>(0);
   const [loadingDetails, setLoadingDetails] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [myPartyIds, setMyPartyIds] = useState<string[]>([]);
+  const [attendingPartyIds, setAttendingPartyIds] = useState<string[]>([]);
 
   useEffect(() => {
     // Get user's location
@@ -83,8 +85,26 @@ const MapPage = () => {
     };
     fetchParties();
 
-    // Session für Like-Button
-    supabase.auth.getSession().then(({ data }) => setSession(data.session));
+    // Session für Like-Button und Marker-Logik
+    supabase.auth.getSession().then(async ({ data }) => {
+      setSession(data.session);
+      const user = data.session?.user;
+      if (user) {
+        // Eigene Parties (Host)
+        const { data: myParties } = await supabase
+          .from('parties')
+          .select('id')
+          .eq('created_by', user.id);
+        setMyPartyIds((myParties || []).map(p => p.id));
+        // Angemeldete Parties
+        const { data: attendances } = await supabase
+          .from('party_attendees')
+          .select('party_id')
+          .eq('user_id', user.id)
+          .eq('status', 'attending');
+        setAttendingPartyIds((attendances || []).map(a => a.party_id));
+      }
+    });
   }, []);
 
   useEffect(() => {
@@ -175,6 +195,33 @@ const MapPage = () => {
 
   const closeModal = () => setSelectedParty(null);
 
+  function getMarkerType(party: Party) {
+    if (myPartyIds.includes(party.id)) return 'own';
+    if (attendingPartyIds.includes(party.id)) return 'attending';
+    return 'public';
+  }
+
+  function renderMarker(party: Party) {
+    const type = getMarkerType(party);
+    let fill = '#6b7280'; // grau
+    if (type === 'own') fill = '#a21caf'; // violett
+    if (type === 'attending') fill = '#ef4444'; // rot
+    return (
+      <Marker key={party.id} longitude={party.longitude!} latitude={party.latitude!} onClick={() => handleMarkerClick(party)}>
+        <svg width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ cursor: 'pointer' }} title={party.title}>
+          <g filter="url(#shadow)">
+            <path d="M16 3C10.477 3 6 7.477 6 13c0 6.075 7.09 14.09 9.293 16.293a1 1 0 0 0 1.414 0C18.91 27.09 26 19.075 26 13c0-5.523-4.477-10-10-10Zm0 12.5A2.5 2.5 0 1 1 16 10a2.5 2.5 0 0 1 0 5Z" fill={fill} stroke="#fff" strokeWidth="2" />
+          </g>
+          <defs>
+            <filter id="shadow" x="0" y="0" width="40" height="40" filterUnits="userSpaceOnUse">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color={fill} flood-opacity="0.3" />
+            </filter>
+          </defs>
+        </svg>
+      </Marker>
+    );
+  }
+
   return (
     <div className="relative h-screen w-full">
       <div className="h-full w-full">
@@ -201,15 +248,7 @@ const MapPage = () => {
             }} />
           </Marker>
           {/* Party markers */}
-          {parties.map((party) => (
-            <Marker
-              key={party.id}
-              longitude={party.longitude!}
-              latitude={party.latitude!}
-              color="#ff0000"
-              onClick={() => handleMarkerClick(party)}
-            />
-          ))}
+          {parties.map(renderMarker)}
         </Map>
       </div>
       {/* Side Panel für Party-Details */}
