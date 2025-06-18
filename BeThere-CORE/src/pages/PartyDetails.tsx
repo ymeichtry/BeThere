@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/use-toast";
 import { Heart, MessageCircle, Users, Calendar, MapPin, Music, Copy } from "lucide-react";
+import Map, { Marker } from 'react-map-gl';
+import maplibregl from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
 
 type Party = {
   id: string;
@@ -18,6 +21,8 @@ type Party = {
   is_public: boolean;
   created_by: string;
   access_id: string;
+  latitude: string | null;
+  longitude: string | null;
 };
 
 type Profile = {
@@ -244,6 +249,10 @@ const PartyDetails = () => {
     }
   };
 
+  const handleMapClick = useCallback(() => {
+    navigate('/map');
+  }, [navigate]);
+
   if (loading) {
     return <div className="flex justify-center items-center min-h-[60vh]">Lädt...</div>;
   }
@@ -252,12 +261,57 @@ const PartyDetails = () => {
     return <div className="text-center mt-10">Party nicht gefunden</div>;
   }
 
+  // Map-Snippet nur anzeigen, wenn Koordinaten vorhanden
+  const hasCoords = party.latitude && party.longitude;
+
+  // Markerfarbe bestimmen
+  let markerColor = '#6b7280'; // grau
+  if (session?.user?.id === party.created_by) markerColor = '#a21caf'; // host
+  else if (isAttending) markerColor = '#ef4444'; // angemeldet
+
   const partyLink = party.access_id;
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 p-6 border rounded-lg shadow-md bg-white">
-      <h1 className="text-3xl font-bold mb-4">{party.title}</h1>
-      
+    <div className="max-w-3xl mx-auto mt-8 flex flex-col gap-6">
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
+          {party.title}
+        </h1>
+        {hasCoords && (
+          <div
+            className="my-4 rounded-lg overflow-hidden border shadow cursor-pointer hover:ring-2 hover:ring-blue-400 transition"
+            style={{ width: '100%', minWidth: 350, maxWidth: 700, height: 300 }}
+            onClick={handleMapClick}
+            title="Zur Kartenansicht"
+          >
+            <Map
+              initialViewState={{
+                longitude: Number(party.longitude),
+                latitude: Number(party.latitude),
+                zoom: 15,
+              }}
+              mapLib={maplibregl}
+              mapStyle="https://api.maptiler.com/maps/basic-v2/style.json?key=DEfQaoKmexkJVxeAeLQg"
+              style={{ width: '100%', height: '100%' }}
+              attributionControl={false}
+            >
+              <Marker longitude={Number(party.longitude)} latitude={Number(party.latitude)}>
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <g filter="url(#shadow)">
+                    <path d="M16 3C10.477 3 6 7.477 6 13c0 6.075 7.09 14.09 9.293 16.293a1 1 0 0 0 1.414 0C18.91 27.09 26 19.075 26 13c0-5.523-4.477-10-10-10Zm0 12.5A2.5 2.5 0 1 1 16 10a2.5 2.5 0 0 1 0 5Z" fill={markerColor} stroke="#fff" strokeWidth="2" />
+                  </g>
+                  <defs>
+                    <filter id="shadow" x="0" y="0" width="32" height="32" filterUnits="userSpaceOnUse">
+                      <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor={markerColor} floodOpacity="0.3" />
+                    </filter>
+                  </defs>
+                </svg>
+              </Marker>
+            </Map>
+          </div>
+        )}
+      </div>
+
       {!party.is_public && party.access_id && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-center gap-2">
           <p className="text-blue-800 text-sm font-medium">Dies ist eine private Party. Teilen Sie diese ID, um andere einzuladen:</p>
