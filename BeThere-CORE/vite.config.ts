@@ -14,6 +14,26 @@ export default defineConfig(({ mode }) => ({
     mode === 'development' &&
     componentTagger(),
   ].filter(Boolean),
+  optimizeDeps: {
+    include: ['react-map-gl'],
+  },
+  build: {
+    commonjsOptions: {
+      include: [/node_modules/],
+    },
+  },
+  css: {
+    preprocessorOptions: {
+      css: {
+        // This option is often used for resolving imports within CSS files, if Mapbox GL JS has such imports
+        // You might need to adjust this based on how Mapbox GL JS imports its internal CSS assets
+        // However, for direct import of the main CSS, it might not be strictly necessary here.
+      },
+    },
+  },
+  ssr: {
+    noExternal: ['mapbox-gl'],
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

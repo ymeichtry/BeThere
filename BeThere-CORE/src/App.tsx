@@ -14,6 +14,7 @@ import Parties from "./pages/Parties";
 import PartyDetails from "./pages/PartyDetails";
 import MyParties from "./pages/MyParties";
 import MyAttendance from "./pages/MyAttendance";
+import MapPage from "./pages/MapPage";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +31,7 @@ const App = () => (
             <Link to="/my-parties" className="hover:underline">Meine Partys</Link>
             <Link to="/my-attendance" className="hover:underline">Meine Anmeldungen</Link>
             <Link to="/create-party" className="hover:underline">Party erstellen</Link>
+            <Link to="/map" className="hover:underline">Karte</Link>
             <HeaderProfileAvatar />
             <NotificationBell />
           </div>
@@ -43,6 +45,7 @@ const App = () => (
           <Route path="/my-parties" element={<MyParties />} />
           <Route path="/my-attendance" element={<MyAttendance />} />
           <Route path="/party/:id" element={<PartyDetails />} />
+          <Route path="/map" element={<MapPage />} />
           {/* CATCH ALL */}
           <Route path="*" element={<NotFound />} />
         </Routes>

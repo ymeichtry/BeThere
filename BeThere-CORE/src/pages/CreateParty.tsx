@@ -11,6 +11,8 @@ const CreatePartyPage = () => {
     title: "",
     description: "",
     location: "",
+    latitude: "",
+    longitude: "",
     datetime: "",
     dresscode: "",
     genre: "",
@@ -18,6 +20,8 @@ const CreatePartyPage = () => {
     is_public: true,
   });
   const [loading, setLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,16 +47,55 @@ const CreatePartyPage = () => {
         ...f,
         [name]: value,
       }));
+      if (name === "location") {
+        setGeoError(null);
+        setForm(f => ({ ...f, latitude: "", longitude: "" }));
+      }
+    }
+  };
+
+  const geocodeAddress = async () => {
+    if (!form.location) return;
+    setGeoLoading(true);
+    setGeoError(null);
+    try {
+      const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(form.location)}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data && data.length > 0) {
+        setForm(f => ({
+          ...f,
+          latitude: data[0].lat,
+          longitude: data[0].lon,
+        }));
+        setGeoError(null);
+      } else {
+        setGeoError("Adresse nicht gefunden oder zu ungenau. Bitte präziser eingeben.");
+        setForm(f => ({ ...f, latitude: "", longitude: "" }));
+      }
+    } catch (e) {
+      setGeoError("Fehler beim Geocoding");
+      setForm(f => ({ ...f, latitude: "", longitude: "" }));
+    }
+    setGeoLoading(false);
+  };
+
+  const handleLocationBlur = () => {
+    if (form.location) {
+      geocodeAddress();
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Save as number if entry_fee is set
     const entry_fee = form.entry_fee !== "" ? Number(form.entry_fee) : null;
+    const latitude = form.latitude !== "" ? Number(form.latitude) : null;
+    const longitude = form.longitude !== "" ? Number(form.longitude) : null;
     const { error } = await supabase.from("parties").insert({
       ...form,
+      latitude,
+      longitude,
       datetime: form.datetime,
       entry_fee,
       created_by: session.user.id,
@@ -72,7 +115,19 @@ const CreatePartyPage = () => {
       <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
         <Input name="title" value={form.title} onChange={handleChange} placeholder="Titel" required />
         <textarea name="description" value={form.description} onChange={handleChange} placeholder="Beschreibung" className="border px-3 py-2 rounded focus:outline-none" />
-        <Input name="location" value={form.location} onChange={handleChange} placeholder="Ort" required />
+        <Input
+          name="location"
+          value={form.location}
+          onChange={handleChange}
+          onBlur={handleLocationBlur}
+          placeholder="Adresse (z.B. Musterstr. 1, Zürich)"
+          required
+        />
+        <div className="flex gap-2">
+          <Input name="latitude" value={form.latitude} onChange={handleChange} placeholder="Breitengrad" required readOnly className="w-1/2" />
+          <Input name="longitude" value={form.longitude} onChange={handleChange} placeholder="Längengrad" required readOnly className="w-1/2" />
+        </div>
+        {geoError && <div className="text-red-500 text-sm">{geoError}</div>}
         <div>
           <span className="block font-medium mb-1">Datum & Uhrzeit</span>
           <Input name="datetime" value={form.datetime} onChange={handleChange} type="datetime-local" required />
@@ -84,7 +139,7 @@ const CreatePartyPage = () => {
           <input type="checkbox" checked={form.is_public} name="is_public" onChange={handleChange} id="is_public" />
           <label htmlFor="is_public">Öffentlich machen</label>
         </div>
-        <Button type="submit" disabled={loading}>{loading ? "Wird gespeichert..." : "Erstellen"}</Button>
+        <Button type="submit" disabled={loading || !form.latitude || !form.longitude || !!geoError}>{loading ? "Wird gespeichert..." : "Erstellen"}</Button>
       </form>
     </div>
   );
