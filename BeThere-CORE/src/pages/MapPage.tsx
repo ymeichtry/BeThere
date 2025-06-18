@@ -229,7 +229,7 @@ const MapPage = () => {
           {...viewState}
           onMove={onMove}
           mapLib={maplibregl}
-          mapStyle="https://tiles.stadiamaps.com/styles/osm_bright.json"
+          mapStyle="https://api.maptiler.com/maps/basic-v2/style.json?key=DEfQaoKmexkJVxeAeLQg"
           style={{ width: '100%', height: '100%' }}
         >
           <NavigationControl />
