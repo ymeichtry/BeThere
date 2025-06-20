@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 import { Bell, Check, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,84 +22,61 @@ interface Notification {
   created_at: string;
 }
 
-const NotificationBell: React.FC = () => {
+// Notification-Helpers für LocalStorage
+const NOTIFICATIONS_KEY = 'local_notifications';
+function loadNotifications(): Notification[] {
+  try {
+    const raw = localStorage.getItem(NOTIFICATIONS_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+function saveNotifications(notifications: Notification[]) {
+  localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
+}
+
+const NotificationBell: React.FC & { addNotification?: (n: Omit<Notification, 'id' | 'created_at'>) => void } = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        setUserId(session.user.id);
-      }
-    };
-    fetchUser();
+    const loaded = loadNotifications();
+    setNotifications(loaded);
+    setUnreadCount(loaded.filter(n => !n.read_at).length);
   }, []);
 
-  useEffect(() => {
-    if (!userId) return;
-
-    const fetchNotifications = async () => {
-      const { data, error } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        toast({ title: "Fehler", description: error.message });
-      } else {
-        setNotifications(data || []);
-        setUnreadCount(data?.filter(n => !n.read_at).length || 0);
-      }
+  // Helper zum Hinzufügen (kann von außen importiert werden)
+  NotificationBell.addNotification = (notification: Omit<Notification, 'id' | 'created_at'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: crypto.randomUUID(),
+      created_at: new Date().toISOString(),
     };
-
-    fetchNotifications();
-
-    // Realtime subscription
-    const notificationChannel = supabase
-      .channel(`public:notifications:user_id=eq.${userId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "notifications" }, payload => {
-        fetchNotifications(); // Re-fetch all notifications on any change
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(notificationChannel);
-    };
-  }, [userId]);
-
-  const markAsRead = async (id: string) => {
-    const { error } = await supabase
-      .from("notifications")
-      .update({ read_at: new Date().toISOString() })
-      .eq("id", id)
-      .eq("user_id", userId);
-
-    if (error) {
-      toast({ title: "Fehler", description: error.message });
-    } else {
-      setNotifications(prev =>
-        prev.map(n => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n))
-      );
-      setUnreadCount(prev => prev > 0 ? prev - 1 : 0);
-    }
+    setNotifications(prev => {
+      const updated = [newNotification, ...prev];
+      saveNotifications(updated);
+      setUnreadCount(updated.filter(n => !n.read_at).length);
+      return updated;
+    });
   };
 
-  const deleteNotification = async (id: string) => {
-    const { error } = await supabase
-      .from("notifications")
-      .delete()
-      .eq("id", id)
-      .eq("user_id", userId);
+  const markAsRead = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.map(n => n.id === id ? { ...n, read_at: new Date().toISOString() } : n);
+      saveNotifications(updated);
+      setUnreadCount(updated.filter(n => !n.read_at).length);
+      return updated;
+    });
+  };
 
-    if (error) {
-      toast({ title: "Fehler", description: error.message });
-    } else {
-      setNotifications(prev => prev.filter(n => n.id !== id));
-      setUnreadCount(prev => prev > 0 && notifications.find(n => n.id === id && !n.read_at) ? prev - 1 : prev);
-    }
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      saveNotifications(updated);
+      setUnreadCount(updated.filter(n => !n.read_at).length);
+      return updated;
+    });
   };
 
   return (

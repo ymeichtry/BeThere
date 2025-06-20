@@ -8,6 +8,7 @@ import { Heart, MessageCircle, Users, Calendar, MapPin, Music, Copy } from "luci
 import Map, { Marker } from 'react-map-gl';
 import maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
+import NotificationBell from "@/components/NotificationBell";
 
 type Party = {
   id: string;
@@ -181,6 +182,7 @@ const PartyDetails = () => {
         setIsLiked(false);
         setLikesCount(prev => prev - 1);
         toast({ title: "Like entfernt", description: "Sie haben Ihr Like entfernt" });
+        // Keine Notification beim Entfernen des Likes
       }
     } else {
       const { error } = await supabase
@@ -194,6 +196,16 @@ const PartyDetails = () => {
         setIsLiked(true);
         setLikesCount(prev => prev + 1);
         toast({ title: "Geliked", description: "Sie haben die Party geliked" });
+        // Notification nur für den aktuellen User
+        if (party) {
+          NotificationBell.addNotification({
+            user_id: session.user.id,
+            type: 'party_liked',
+            title: 'Party geliked',
+            message: `Du hast die Party "${party.title}" geliked.`,
+            read_at: null
+          });
+        }
       }
     }
   };
@@ -226,6 +238,16 @@ const PartyDetails = () => {
         setIsAttending(true);
         toast({ title: "Angemeldet", description: "Sie haben sich für die Party angemeldet" });
         fetchPartyDetails(); // Refresh attendees list
+        // Notification nur für den aktuellen User
+        if (party) {
+          NotificationBell.addNotification({
+            user_id: session.user.id,
+            type: 'party_signup',
+            title: 'Angemeldet',
+            message: `Du hast dich für die Party "${party.title}" angemeldet.`,
+            read_at: null
+          });
+        }
       }
     }
   };

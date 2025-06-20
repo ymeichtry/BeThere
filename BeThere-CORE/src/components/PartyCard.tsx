@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Users, Heart, Calendar, MapPin, Music, Edit, Trash2, Link2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
+import NotificationBell from "@/components/NotificationBell";
 
 type Profile = { id: string; name: string | null; avatar_url: string | null };
 
@@ -61,6 +62,13 @@ const PartyCard: React.FC<PartyCardProps> = ({
         toast({ title: "Fehler", description: "Party konnte nicht gelöscht werden" });
       } else {
         toast({ title: "Erfolg", description: "Party wurde gelöscht" });
+        NotificationBell.addNotification({
+          user_id: party.created_by,
+          type: 'party_deleted',
+          title: 'Party gelöscht',
+          message: `Die Party "${party.title}" wurde gelöscht.`,
+          read_at: null
+        });
         if (onDelete) onDelete(party.id);
       }
     }

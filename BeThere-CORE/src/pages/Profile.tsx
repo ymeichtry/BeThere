@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import NotificationBell from "@/components/NotificationBell";
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<{ id: string; name: string | null; avatar_url: string | null }>({ id: "", name: "", avatar_url: null });
@@ -44,6 +45,13 @@ const ProfilePage = () => {
     else {
       toast({ title: "Profil aktualisiert", description: "Dein Name wurde aktualisiert." });
       setProfile(prev => ({ ...prev, name }));
+      NotificationBell.addNotification({
+        user_id: profile.id,
+        type: 'profile_updated',
+        title: 'Profil aktualisiert',
+        message: 'Dein Name wurde erfolgreich geändert.',
+        read_at: null
+      });
     }
   };
 
@@ -88,6 +96,13 @@ const ProfilePage = () => {
 
       setProfile(prev => ({ ...prev, avatar_url: data.publicUrl }));
       toast({ title: "Profilbild aktualisiert" });
+      NotificationBell.addNotification({
+        user_id: profile.id,
+        type: 'avatar_updated',
+        title: 'Profilbild aktualisiert',
+        message: 'Dein Profilbild wurde erfolgreich geändert.',
+        read_at: null
+      });
     } catch (error: unknown) {
       toast({ 
         title: "Fehler beim Upload", 

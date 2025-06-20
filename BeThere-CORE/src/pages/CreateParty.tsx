@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import NotificationBell from "@/components/NotificationBell";
 
 const CreatePartyPage = () => {
   const [session, setSession] = useState<any>(null);
@@ -131,6 +132,14 @@ const CreatePartyPage = () => {
         entry_fee,
       }).eq("id", editId);
       error = updateError;
+      if (!error) {
+        NotificationBell.addNotification({
+          user_id: session.user.id,
+          type: 'party_edited',
+          title: 'Party bearbeitet',
+          message: `Die Party "${form.title}" wurde erfolgreich bearbeitet.`
+        });
+      }
     } else {
       // Insert
       const { error: insertError } = await supabase.from("parties").insert({
@@ -142,6 +151,14 @@ const CreatePartyPage = () => {
         created_by: session.user.id,
       });
       error = insertError;
+      if (!error) {
+        NotificationBell.addNotification({
+          user_id: session.user.id,
+          type: 'party_created',
+          title: 'Party erstellt',
+          message: `Die Party "${form.title}" wurde erfolgreich erstellt.`
+        });
+      }
     }
     setLoading(false);
     if (error) {
