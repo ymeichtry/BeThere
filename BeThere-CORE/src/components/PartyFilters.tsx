@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -33,8 +32,8 @@ const PartyFilters: React.FC<PartyFiltersProps> = ({
   locations,
 }) => {
   return (
-    <div className="bg-white rounded-lg shadow p-4 mb-6">
-      <div className="flex flex-col lg:flex-row gap-4">
+    <div className="bg-white rounded-lg shadow p-3 sm:p-4 mb-4 sm:mb-6">
+      <div className="flex flex-col gap-3 lg:flex-row lg:gap-4">
         <div className="flex-1">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -46,8 +45,7 @@ const PartyFilters: React.FC<PartyFiltersProps> = ({
             />
           </div>
         </div>
-        
-        <div className="flex flex-col sm:flex-row gap-2 lg:gap-4">
+        <div className="flex flex-col gap-2 sm:flex-row sm:gap-2 lg:gap-4 w-full lg:w-auto">
           <Select value={selectedGenre} onValueChange={onGenreChange}>
             <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Genre" />

@@ -205,7 +205,7 @@ const MyAttendance = () => {
   if (loading) return <div className="flex justify-center items-center min-h-[60vh]">Lädt...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 flex flex-col gap-6">
+    <div className="max-w-4xl mx-auto mt-4 px-2 sm:mt-8 sm:px-0 flex flex-col gap-6">
       <h1 className="text-3xl font-bold">Meine Anmeldungen</h1>
 
       <div className="flex gap-2">

@@ -272,7 +272,7 @@ const PartyDetails = () => {
   const partyLink = party.access_id;
 
   return (
-    <div className="max-w-3xl mx-auto mt-8 flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto mt-4 px-2 sm:mt-8 sm:px-0 flex flex-col gap-6">
       <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
         <h1 className="text-3xl font-bold mb-2 flex items-center gap-2">
           {party.title}

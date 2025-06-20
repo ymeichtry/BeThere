@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -126,10 +125,10 @@ const MyParties = () => {
   if (loading) return <div className="flex justify-center items-center min-h-[60vh]">Lädt...</div>;
 
   return (
-    <div className="max-w-4xl mx-auto mt-8 flex flex-col gap-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Meine Parties</h1>
-        <Button onClick={() => navigate("/create-party")} className="flex items-center gap-2">
+    <div className="max-w-4xl mx-auto mt-4 px-2 sm:mt-8 sm:px-0 flex flex-col gap-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0">
+        <h1 className="text-2xl sm:text-3xl font-bold">Meine Parties</h1>
+        <Button onClick={() => navigate("/create-party")} className="w-full sm:w-auto flex items-center gap-2">
           <Plus className="w-4 h-4" />
           Neue Party erstellen
         </Button>

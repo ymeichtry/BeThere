@@ -78,29 +78,29 @@ const PartyCard: React.FC<PartyCardProps> = ({
       className="border rounded-lg shadow hover:shadow-lg transition-shadow cursor-pointer bg-white"
       onClick={handlePartyClick}
     >
-      <div className="flex flex-col md:flex-row items-start gap-4 p-6">
-        <div className="flex flex-col items-center min-w-[100px]">
+      <div className="flex flex-col md:flex-row items-start gap-3 sm:gap-4 p-3 sm:p-6">
+        <div className="flex flex-col items-center min-w-[64px] sm:min-w-[100px]">
           <img
             src={host?.avatar_url || "/placeholder.svg"}
             alt="Host"
-            className="w-16 h-16 rounded-full object-cover border"
+            className="w-12 h-12 sm:w-16 sm:h-16 rounded-full object-cover border"
           />
-          <span className="text-center text-sm mt-2">{host?.name || "Host"}</span>
+          <span className="text-center text-xs sm:text-sm mt-2">{host?.name || "Host"}</span>
         </div>
         
-        <div className="flex-1">
-          <div className="flex items-center gap-2 mb-2">
-            <span className="font-bold text-xl">{party.title}</span>
+        <div className="flex-1 w-full">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-2">
+            <span className="font-bold text-lg sm:text-xl">{party.title}</span>
             {!party.is_public && (
               <span className="text-xs text-yellow-600 bg-yellow-200 rounded px-2 py-1">Privat</span>
             )}
           </div>
           
           {party.description && (
-            <div className="mb-3 text-gray-600 line-clamp-2">{party.description}</div>
+            <div className="mb-2 sm:mb-3 text-gray-600 line-clamp-2 text-xs sm:text-base">{party.description}</div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm text-gray-600 mb-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 sm:gap-2 text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
             <div className="flex items-center gap-2">
               <Calendar className="w-4 h-4 text-blue-500" />
               <span>{new Date(party.datetime).toLocaleString()}</span>
@@ -122,7 +122,7 @@ const PartyCard: React.FC<PartyCardProps> = ({
             )}
           </div>
 
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div className="flex items-center gap-4 text-sm text-gray-500">
               <div className="flex items-center gap-1">
                 <Users className="w-4 h-4" />
@@ -135,36 +135,38 @@ const PartyCard: React.FC<PartyCardProps> = ({
             </div>
 
             {showActions && isOwner && (
-              <div className="flex items-center gap-2">
-                {!party.is_public && (
+              <div className="flex flex-col sm:flex-row gap-2 mt-2 sm:mt-0">
+                <div className="flex gap-2">
+                  {!party.is_public && (
+                    <Button
+                      onClick={copyPrivateLink}
+                      variant="outline"
+                      size="sm"
+                      className="flex items-center gap-1"
+                    >
+                      <Link2 className="w-4 h-4" />
+                      Link
+                    </Button>
+                  )}
                   <Button
-                    onClick={copyPrivateLink}
+                    onClick={handleEdit}
                     variant="outline"
                     size="sm"
                     className="flex items-center gap-1"
                   >
-                    <Link2 className="w-4 h-4" />
-                    Link
+                    <Edit className="w-4 h-4" />
+                    Bearbeiten
                   </Button>
-                )}
-                <Button
-                  onClick={handleEdit}
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Edit className="w-4 h-4" />
-                  Bearbeiten
-                </Button>
-                <Button
-                  onClick={handleDelete}
-                  variant="destructive"
-                  size="sm"
-                  className="flex items-center gap-1"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Löschen
-                </Button>
+                  <Button
+                    onClick={handleDelete}
+                    variant="destructive"
+                    size="sm"
+                    className="flex items-center gap-1"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Löschen
+                  </Button>
+                </div>
               </div>
             )}
           </div>
