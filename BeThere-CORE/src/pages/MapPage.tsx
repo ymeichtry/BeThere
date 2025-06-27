@@ -72,16 +72,22 @@ const MapPage = () => {
 
     // Echte Partys aus Supabase laden
     const fetchParties = async () => {
+      let userId: string | null = null;
+      const sessionData = await supabase.auth.getSession();
+      if (sessionData.data.session) {
+        userId = sessionData.data.session.user.id;
+      }
       const { data, error } = await supabase
         .from('parties')
-        .select('id, title, latitude, longitude')
-        .eq('is_public', true);
+        .select('id, title, latitude, longitude, datetime, is_public, created_by')
+        .or(`is_public.eq.true${userId ? `,created_by.eq.${userId}` : ''}`);
       if (error) {
         console.error('Fehler beim Laden der Partys:', error);
         return;
       }
-      // Nur Partys mit gültigen Koordinaten anzeigen
-      setParties((data || []).filter(p => p.latitude && p.longitude));
+      // Nur Partys mit gültigen Koordinaten und in der Zukunft anzeigen
+      const now = new Date();
+      setParties((data || []).filter(p => p.latitude && p.longitude && p.datetime && new Date(p.datetime) > now));
     };
     fetchParties();
 
