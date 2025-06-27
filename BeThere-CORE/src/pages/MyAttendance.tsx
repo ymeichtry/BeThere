@@ -202,6 +202,11 @@ const MyAttendance = () => {
     }
   };
 
+  // Hilfsfunktionen für Zeitfilter
+  const now = new Date();
+  const upcomingParties = parties.filter(p => new Date(p.datetime) > now);
+  const pastParties = parties.filter(p => new Date(p.datetime) <= now);
+
   if (loading) return <div className="flex justify-center items-center min-h-[60vh]">Lädt...</div>;
 
   return (
@@ -220,12 +225,13 @@ const MyAttendance = () => {
         </Button>
       </div>
       
-      {parties.length === 0 ? (
+      {/* Zukünftige Partys */}
+      {upcomingParties.length === 0 ? (
         <div className="text-center text-gray-500 mt-10">
-          Sie sind für keine Parties angemeldet.
+          Sie sind für keine anstehenden Parties angemeldet.
         </div>
       ) : (
-        parties.map(party => (
+        upcomingParties.map(party => (
           <PartyCard
             key={party.id}
             party={party}
@@ -234,6 +240,23 @@ const MyAttendance = () => {
             attendeesCount={attendeesCount[party.id] || 0}
           />
         ))
+      )}
+      {/* Vergangene Partys */}
+      {pastParties.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-2">Vergangene Partys</h2>
+          <div className="flex flex-col gap-4">
+            {pastParties.map(party => (
+              <PartyCard
+                key={party.id}
+                party={party}
+                host={hosts[party.created_by]}
+                likesCount={likesCount[party.id] || 0}
+                attendeesCount={attendeesCount[party.id] || 0}
+              />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

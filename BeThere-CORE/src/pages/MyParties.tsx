@@ -122,6 +122,11 @@ const MyParties = () => {
     setParties(prev => prev.filter(p => p.id !== partyId));
   };
 
+  // Hilfsfunktionen für Zeitfilter
+  const now = new Date();
+  const upcomingParties = parties.filter(p => new Date(p.datetime) > now);
+  const pastParties = parties.filter(p => new Date(p.datetime) <= now);
+
   if (loading) return <div className="flex justify-center items-center min-h-[60vh]">Lädt...</div>;
 
   return (
@@ -133,17 +138,13 @@ const MyParties = () => {
           Neue Party erstellen
         </Button>
       </div>
-      
-      {parties.length === 0 ? (
+      {/* Zukünftige Partys */}
+      {upcomingParties.length === 0 ? (
         <div className="text-center text-gray-500 mt-10">
-          <p className="mb-4">Sie haben noch keine Parties erstellt.</p>
-          <Button onClick={() => navigate("/create-party")} className="flex items-center gap-2 mx-auto">
-            <Plus className="w-4 h-4" />
-            Erste Party erstellen
-          </Button>
+          <p className="mb-4">Sie haben keine anstehenden Parties.</p>
         </div>
       ) : (
-        parties.map(party => (
+        upcomingParties.map(party => (
           <PartyCard
             key={party.id}
             party={party}
@@ -156,6 +157,27 @@ const MyParties = () => {
             onDelete={handleDelete}
           />
         ))
+      )}
+      {/* Vergangene Partys */}
+      {pastParties.length > 0 && (
+        <div className="mt-8">
+          <h2 className="text-lg font-semibold mb-2">Vergangene Partys</h2>
+          <div className="flex flex-col gap-4">
+            {pastParties.map(party => (
+              <PartyCard
+                key={party.id}
+                party={party}
+                host={hosts[party.created_by]}
+                likesCount={likesCount[party.id] || 0}
+                attendeesCount={attendeesCount[party.id] || 0}
+                isOwner={true}
+                showActions={true}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+              />
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );

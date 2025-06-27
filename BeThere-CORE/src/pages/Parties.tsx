@@ -133,6 +133,10 @@ const Parties = () => {
   const applyFilters = () => {
     let filtered = [...allParties];
 
+    // Nur zukünftige Partys anzeigen
+    const now = new Date();
+    filtered = filtered.filter(party => new Date(party.datetime) > now);
+
     // Search filter
     if (searchTerm) {
       filtered = filtered.filter(party =>
