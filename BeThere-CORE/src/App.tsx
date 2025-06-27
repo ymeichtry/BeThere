@@ -36,7 +36,6 @@ const App = () => {
                   <Link to="/parties" className="hover:underline">Alle Partys</Link>
                   <Link to="/my-parties" className="hover:underline">Meine Partys</Link>
                   <Link to="/my-attendance" className="hover:underline">Meine Anmeldungen</Link>
-                  <Link to="/create-party" className="hover:underline">Party erstellen</Link>
                   <Link to="/map" className="hover:underline">Karte</Link>
                 </div>
               </div>
@@ -54,7 +53,6 @@ const App = () => {
                 <Link to="/parties" className="py-2" onClick={() => setNavOpen(false)}>Alle Partys</Link>
                 <Link to="/my-parties" className="py-2" onClick={() => setNavOpen(false)}>Meine Partys</Link>
                 <Link to="/my-attendance" className="py-2" onClick={() => setNavOpen(false)}>Meine Anmeldungen</Link>
-                <Link to="/create-party" className="py-2" onClick={() => setNavOpen(false)}>Party erstellen</Link>
                 <Link to="/map" className="py-2" onClick={() => setNavOpen(false)}>Karte</Link>
               </div>
             )}
