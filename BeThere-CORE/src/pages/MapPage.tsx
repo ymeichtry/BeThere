@@ -235,7 +235,7 @@ const MapPage = () => {
           {...viewState}
           onMove={onMove}
           mapLib={maplibregl}
-          mapStyle="https://api.maptiler.com/maps/basic-v2/style.json?key=DEfQaoKmexkJVxeAeLQg"
+          mapStyle={`https://api.maptiler.com/maps/basic-v2/style.json?key=${import.meta.env.VITE_MAPTILER_KEY}`}
           style={{ width: '100%', height: '100%' }}
         >
           <NavigationControl />
